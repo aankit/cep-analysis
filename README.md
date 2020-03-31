@@ -4,9 +4,6 @@
 
 2. Converted all PDFs to text files with PDFMiner's pdf2txt.py tool.
 
-3. Built a CSV of CEP questions with their section headers.
-
 ## ToDo List
 
-1. Create a CEP template that can used as a reference
-2. 
+1. Build a CSV of CEP questions with their section headers to help parse txt files.
