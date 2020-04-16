@@ -9,7 +9,6 @@ with cep_structure:
     reader = csv.reader(cep_structure)
 
     for row in reader:
-        print(row)
         print(len(row))
         # section = row[0]
         # question = row[1]
