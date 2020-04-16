@@ -6,8 +6,12 @@
 
 3. Removed newlines, leading spaces/tabs, and trailing spaces and tabs as it was hampering building the CSV of CEP questions - i.e. When copy-pasting the questions asked of schools into the cep1819-structure.csv file, I encountered unexpected newline characters that would result in the CSV being improperly read by Python and subsequently would make extracting answers to questions impossible.
 
+4. Build a CSV of CEP text questions with their section headers to help parse txt files.
+
 ## ToDo List
 
-1. Build a CSV of CEP questions with their section headers to help parse txt files.
-2. Build a CSV of structure - district-borough-number, question, answer
-3. Topic analysis (Discovering and Visualizing Topics in Texts)
+1. Remove page headers and page numbers from clean text files
+2. Build a text file of CEP specific "stop text", text that can be safely stripped out of question-answer CSV
+3. Build a CSV for the CEP short answer data with structure - district-borough-number, question, answer
+4. Extract tabular CSV data [tabula-py](https://github.com/chezou/tabula-py)
+4. Topic analysis (Discovering and Visualizing Topics in Texts)
