@@ -7,13 +7,13 @@ from os import listdir
 from os.path import isfile, join
 import pprint
 
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+logging.basicConfig(stream=sys.stderr, level=logging.ERROR)
 pp = pprint.PrettyPrinter()
 
 
 #get list of all cleaned text files
 def get_cep_txt_filepaths():
-    text_dir_path = './txt_clean/'
+    text_dir_path = './cep_txt_clean/'
     text_filepaths = [join(text_dir_path, f) for f in listdir(text_dir_path) if isfile(join(text_dir_path, f))]
     return text_filepaths
 
@@ -21,8 +21,10 @@ def get_cep_txt_filepaths():
 def extract_answers_from_ceps(questions):
     num_qs = len(questions)
     cep_parser_indices = {}
+    q_not_found_count = {}
     for filepath in get_cep_txt_filepaths():
         cep_parser_indices[filepath] = {}
+        # if filepath == './cep_txt_clean/X391.txt':
         school_cep = open(filepath, 'r')
         with school_cep:
             data = school_cep.read()
@@ -36,17 +38,25 @@ def extract_answers_from_ceps(questions):
                 next_q_lowest_index = data.find(questions[q_number+1]) if q_number < (len(questions)-1) else len(data)
                 a_highest_index = next_q_lowest_index - 1 if next_q_lowest_index != -1 else -1
                 #if q and a's found, save to parser indices else log error
-                if a_lowest_index != -1 or a_highest_index != -1:
+                if a_lowest_index != -1:
                     qs_found += 1
                     #save the question number, question, answer lowest index, and answer highest index
                     cep_parser_indices[filepath][q_number] = [question, a_lowest_index, a_highest_index]
                 else:
-                    logging.info(f'{q_number+1} is not found')
+                    if question in q_not_found_count:
+                        q_not_found_count[question] += 1
+                    else:
+                        q_not_found_count[question] = 1
             #logging if we didn't find total number of questions
-            if(qs_found < num_qs):
-                logging.info(f'found {qs_found} of {num_qs} in {filepath}')
-            #print the cep_parse_indices
-    pp.pprint(cep_parser_indices['./txt_clean/X811.txt'])
+            if(qs_found == num_qs):
+                logging.info(f'found all qs in {filepath}')
+            else:
+                logging.warning(f'found {qs_found} of {num_qs} in {filepath}')
+                #print the cep_parse_indices
+    for k, v in q_not_found_count.items():
+        if v > 1000 and v < 1579:
+            print(k)
+            print("----")
 
 
 #check if cep structure csv is reading correctly

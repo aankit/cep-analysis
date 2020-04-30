@@ -16,11 +16,15 @@ The time, effort, and specificity of the data in these plans have led me to beli
 
 5. First pass at analyzing parsing patterns. A few questions are not being found in all, a few in many, and a few others in just some. Going back to cleaning script before dealing with edge cases.
 
+6. While analyzing parse patterns - specifically the patterns of which questions are not found - I noticed that there are two additional CEP formats - Renewal School Comprehensive Education Plan (RSCEP) and the School Comprehensive Education Plan (SCEP). Short term I think I will ignore parsing these, but will need a better long term plan.
+
 ## ToDo List
 
-1. Analyze parse patterns for other text cleaning
-2. Build a text file of CEP specific "stop text", text that can be safely stripped out of question-answer CSV
-3. Build a CSV for the CEP short answer data with structure - district-borough-number, question, answer
+1. Analyze parse patterns to learn about CEPs and to find opportunities to sanitize, engineer, organize data.
+2a. Build a text file of CEP specific "stop text", text that can be safely stripped out of question-answer CSV (may not be necessary)
+2b. General NLP text pre-processing as described [here](https://medium.com/@datamonsters/text-preprocessing-in-python-steps-tools-and-examples-bf025f872908) also in [this awesome Google Sheet of tools](https://docs.google.com/spreadsheets/d/1-9rMhfcmxFv2V2Q5ZWn1FfLDZZYsuwb1eoSp9CiEEOg/edit#gid=1112515333)
+3a. Build a CSV for the CEP short answer data with structure - district-borough-number, question, answer
+3b. Do I need to parse Qs and As for the CEP or can I use NLP to skip this step and start to look for interesting patterns?
 4. Extract tabular CSV data [tabula-py](https://github.com/chezou/tabula-py)
 5. Topic analysis (Discovering and Visualizing Topics in Texts)
 
