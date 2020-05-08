@@ -21,11 +21,11 @@ The time, effort, and specificity of the data in these plans have led me to beli
 ## ToDo List
 
 1. Analyze parse patterns to learn about CEPs and to find opportunities to sanitize, engineer, organize data.
-2a. Build a text file of CEP specific "stop text", text that can be safely stripped out of question-answer CSV (may not be necessary)
-2b. General NLP text pre-processing as described [here](https://medium.com/@datamonsters/text-preprocessing-in-python-steps-tools-and-examples-bf025f872908) also in [this awesome Google Sheet of tools](https://docs.google.com/spreadsheets/d/1-9rMhfcmxFv2V2Q5ZWn1FfLDZZYsuwb1eoSp9CiEEOg/edit#gid=1112515333)
-3a. Build a CSV for the CEP short answer data with structure - district-borough-number, question, answer
-3b. Do I need to parse Qs and As for the CEP or can I use NLP to skip this step and start to look for interesting patterns?
-4. Extract tabular CSV data [tabula-py](https://github.com/chezou/tabula-py)
-5. Topic analysis (Discovering and Visualizing Topics in Texts)
+1. Build a text file of CEP specific "stop text", text that can be safely stripped out of question-answer CSV (may not be necessary)
+1. General NLP text pre-processing as described [here](https://medium.com/@datamonsters/text-preprocessing-in-python-steps-tools-and-examples-bf025f872908) also in [this awesome Google Sheet of tools](https://docs.google.com/spreadsheets/d/1-9rMhfcmxFv2V2Q5ZWn1FfLDZZYsuwb1eoSp9CiEEOg/edit#gid=1112515333)
+1. Build a CSV for the CEP short answer data with structure - district-borough-number, question, answer
+1. Do I need to parse Qs and As for the CEP or can I use NLP to skip this step and start to look for interesting patterns?
+1. Extract tabular CSV data [tabula-py](https://github.com/chezou/tabula-py)
+1. Topic analysis (Discovering and Visualizing Topics in Texts)
 
 
