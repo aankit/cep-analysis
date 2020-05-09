@@ -16,7 +16,7 @@ The time, effort, and specificity of the data in these plans have led me to beli
 
 5. First pass at analyzing parsing patterns. A few questions are not being found in all, a few in many, and a few others in just some. Going back to cleaning script before dealing with edge cases.
 
-6. Sorted CEPs into folders for the five formats used:
+6. Sorted CEPs into folders for the five formats used (with counts):
     * CEP: 1,167
     * SCEP: 239
     * Renewal SCEP: 50
