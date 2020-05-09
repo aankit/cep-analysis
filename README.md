@@ -16,7 +16,13 @@ The time, effort, and specificity of the data in these plans have led me to beli
 
 5. First pass at analyzing parsing patterns. A few questions are not being found in all, a few in many, and a few others in just some. Going back to cleaning script before dealing with edge cases.
 
-6. While analyzing parse patterns - specifically the patterns of which questions are not found - I noticed that there are two additional CEP formats - Renewal School Comprehensive Education Plan (RSCEP) and the School Comprehensive Education Plan (SCEP). Short term I think I will ignore parsing these, but will need a better long term plan.
+6. Sorted CEPs into five formats:
+    * CEP: 1,167
+    * SCEP: 239
+    * Renewal SCEP: 50
+    * CEP-CS: 102
+    * Rise CEP: 21
+
 
 ## ToDo List
 
