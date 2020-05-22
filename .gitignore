@@ -1,5 +1,6 @@
 .DS_Store
 pdfs/
 venv/
-
+standard_ceps_parsed.csv
+standard_ceps_parsed_csv.zip
 
