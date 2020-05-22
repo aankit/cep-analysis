@@ -4,6 +4,12 @@ Annually all NYC Department of Education schools, except for charters, bring tog
 
 The time, effort, and specificity of the data in these plans have led me to believe it should be open (machine-readable) so it can be analyzed and used in analyses by researchers and practioners and potentially be made legible for current and prospective teachers, school leaders, parents, and anyone else that is impacted by our public schools.
 
+## Early results
+
+See the two files: standard_ceps_mission_statements.csv and standard_ceps_pip.csv.
+
+Also the cep1819-structure.csv is the earliest result. It was manually created to help the computer parse CEPs.
+
 ## CEP Analysis
 
 1. Downloaded all NYC Department of Education school's Comprehensive Education Plan(CEPs) from the iPlan Portal. All public schools except charter schools, which are still considered public because they receive public funding, are required to submit CEPs annually. 1,579 schools filed plans for the 2018-19 school year.
@@ -16,12 +22,16 @@ The time, effort, and specificity of the data in these plans have led me to beli
 
 5. First pass at analyzing parsing patterns. A few questions are not being found in all, a few in many, and a few others in just some. Going back to cleaning script before dealing with edge cases.
 
-6. Sorted CEPs into folders for the five formats used (with counts):
+6. Sorted CEPs into directories for the five formats used (with counts):
     * CEP: 1,167
     * SCEP: 239
     * Renewal SCEP: 50
     * CEP-CS: 102
     * Rise CEP: 21
+
+7. Focused on the "standard" CEP format (the largest group above). Parser using Python String.find() is working with 80-90% accuracy (very much esimated).
+
+8. I researched, tested and also implemented a [fuzzysearch](https://github.com/taleinat/fuzzysearch) parser function that uses Levenshtein distance. Fuzzysearch was able to find questions that were mangled when converted to text from PDF when higher Levenshtein distances were used. Not using as main parser yet, but will test and make the switch if it gets me closer to 100% than String.find().
 
 
 ## ToDo List
