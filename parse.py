@@ -20,8 +20,8 @@ def get_cep_txt_filepaths():
 
 
 #check if cep structure csv is reading correctly, return lines with issues
-def cep_structure_questions(filepath):
-    questions = []
+def cep_structure_intake(filepath):
+    structure = []
     cep_structure = open(filepath, 'r')
     with cep_structure:
         reader = csv.reader(cep_structure)
@@ -34,8 +34,8 @@ def cep_structure_questions(filepath):
             if(len(row) != 2):
                 logging.info("line %d has an issue", line_number)
             else:
-                questions.append(row)
-    return questions
+                structure.append(row)
+    return structure
 
 
 def fuzzy_parse_ceps(questions):
@@ -163,7 +163,27 @@ def parse_ceps(questions):
     return ceps_parsed
 
 
-def find_q_index(questions):
+def find_section_indices(structure):
+    sections_parsed = []
+    for filepath in get_cep_txt_filepaths():
+        school_cep = open(filepath, 'r')
+        with school_cep:
+            data = school_cep.read()
+            for q_number, section_and_question in enumerate(structure):
+                # separate section and question
+                section = section_and_question[0]
+                question = section_and_question[1]
+                section_index = data.find(section)
+                cep_record = {}
+                cep_record['bn'] = filepath[-8:-4]
+                cep_record['number'] = q_number
+                cep_record['section'] = section
+                cep_record['section_index'] = section_index
+                sections_parsed.append(cep_record)
+    return sections_parsed
+
+
+def find_q_indices(questions):
     qs_parsed = []
     q_not_found_count = {}
     for filepath in get_cep_txt_filepaths():
@@ -186,7 +206,6 @@ def find_q_index(questions):
                     current_cep_q_a['dbn'] = filepath[-8:-4]
                     current_cep_q_a['number'] = q_number
                     current_cep_q_a['question'] = question
-                    num_qs += 1
                     # find current q lowest index
                     q_lowest_index = data.find(question)
                     # find next q lowest index
@@ -200,37 +219,17 @@ def find_q_index(questions):
     return qs_parsed
 
 
-def test():
+
+def test:
     cep_structure_filepath = './cep1819-structure.csv'
     #check if issues, get questions
-    questions = cep_structure_questions(cep_structure_filepath)
+    structure = cep_structure_intake(cep_structure_filepath)
     #can we find the question in every txt file? if not log which question and which text file
-    ceps_parsed = parse_ceps(questions)
-    #lots of data to output, let's choose one question for now
-    one_record_per_school = []
-    for record in ceps_parsed:
-        if record['number'] == 6:
-            one_record_per_school.append(record)
-    #now let's write this one record per school for illustrative purposes
-    fields = ["dbn", "number", "question", "answer"]
-    filename = "5a-3b.csv"
-    with open(filename, 'w') as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=fields)
-        writer.writeheader()
-        writer.writerows(one_record_per_school)
-    #fuzzysearch_answers_from_ceps(cep_structure_filepath)
+    sections_parsed = find_section_indices(questions)
+    qs_parsed = find_q_indices(questions)
 
 
-def test_qs():
-    cep_structure_filepath = './cep1819-structure.csv'
-    #check if issues, get questions
-    questions = cep_structure_questions(cep_structure_filepath)
-    #can we find the question in every txt file? if not log which question and which text file
-    qs_parsed = find_q_index(questions)
-    for record in qs_parsed:
-        if record['dbn'] == 'X086' and record['q_lowest_index'] == -1:
-            pp.pprint(record)
 
 
-# test_qs()
+test()
 
