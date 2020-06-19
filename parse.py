@@ -217,7 +217,7 @@ def find_question_indices(cep_text_file_paths, sections, structure):
             #use school section records to narrow down to grab question
             starting_index = 0
             for record in school_section_records:
-                record['structure_index']
+                pp.pprint(record['structure_index'])
     return records
 
 
@@ -228,7 +228,7 @@ def test():
     structure = cep_structure_intake(cep_structure_filepath)
     #start parsing the text files, starting broad and getting more granular
     sections = find_section_indices(cep_text_file_paths, structure)
-    #questions = find_question_indices(cep_text_file_paths, sections, structure)
+    questions = find_question_indices(cep_text_file_paths, sections, structure)
     #answers
     for record in sections:
         if record['bn'] == 'Q031' and record['section_index'] != -1:
