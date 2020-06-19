@@ -13,8 +13,7 @@ pp = pprint.PrettyPrinter()
 
 
 #get list of all cleaned text files
-def get_cep_txt_filepaths():
-    text_dir_path = './cep_txt/'
+def get_cep_txt_filepaths(text_dir_path):
     text_filepaths = [join(text_dir_path, f) for f in listdir(text_dir_path) if isfile(join(text_dir_path, f))]
     return text_filepaths
 
@@ -163,73 +162,78 @@ def parse_ceps(questions):
     return ceps_parsed
 
 
-def find_section_indices(structure):
-    sections_parsed = []
-    for filepath in get_cep_txt_filepaths():
+def find_section_indices(cep_text_file_paths, structure):
+    records = []
+    for filepath in get_cep_txt_filepaths(cep_text_file_paths):
         school_cep = open(filepath, 'r')
         with school_cep:
             data = school_cep.read()
-            for q_number, section_and_question in enumerate(structure):
+            school_records = []
+            starting_index = 0
+            for index, section_and_question in enumerate(structure):
                 # separate section and question
                 section = section_and_question[0]
                 question = section_and_question[1]
-                section_index = data.find(section)
-                cep_record = {}
-                cep_record['bn'] = filepath[-8:-4]
-                cep_record['number'] = q_number
-                cep_record['section'] = section
-                cep_record['section_index'] = section_index
-                sections_parsed.append(cep_record)
-    return sections_parsed
+                section_index = data.find(section, starting_index)
+                if section_index != -1:
+                    starting_index = section_index
+                    cep_record = {}
+                    cep_record['bn'] = filepath[-8:-4]
+                    cep_record['structure_index'] = index
+                    cep_record['section'] = section
+                    cep_record['section_index'] = section_index
+                    school_records.append(cep_record)
+            for i, record in enumerate(school_records):
+                current_section_index = record['section_index']
+                look_ahead = 1
+                next_section_index = None
+                while next_section_index is None:
+                    if i+look_ahead >= len(school_records)-1:
+                        next_section_index = len(data)-1
+                    else:
+                        next_section_index = school_records[i+look_ahead]['section_index']
+                        if current_section_index == next_section_index:
+                            look_ahead += 1
+                            next_section_index = None
+                        else:
+                            next_section_index = school_records[i+look_ahead]['section_index']
+                record['section_end_index'] = next_section_index - 1
+                records.append(record)
+    return records
 
 
-def find_q_indices(questions):
-    qs_parsed = []
-    q_not_found_count = {}
-    for filepath in get_cep_txt_filepaths():
-        # qs_parsed[filepath] = {}
-        # if filepath == './cep_txt_clean/X391.txt':
+def find_question_indices(cep_text_file_paths, sections, structure):
+    records = []
+    for filepath in get_cep_txt_filepaths(cep_text_file_paths):
         school_cep = open(filepath, 'r')
+        bn = filepath[-8:-4]
         with school_cep:
             data = school_cep.read()
-            num_qs = 0
-            qs_found = 0
-            #get lowest indices of questions
-            for q_number, section_and_question in enumerate(questions):
-                # separate section and question
-                section = section_and_question[0]
-                question = section_and_question[1]
-                # check if question section in data
-                if data.find(section) != -1:
-                    #initialize dict to capture cep, qn, q, and a set
-                    current_cep_q_a = {}
-                    current_cep_q_a['dbn'] = filepath[-8:-4]
-                    current_cep_q_a['number'] = q_number
-                    current_cep_q_a['question'] = question
-                    # find current q lowest index
-                    q_lowest_index = data.find(question)
-                    # find next q lowest index
-                    current_cep_q_a['q_lowest_index'] = q_lowest_index
-                qs_parsed.append(current_cep_q_a)
-            # logging if we didn't find total number of questions
-            if(qs_found == num_qs):
-                logging.info(f'found all qs in {filepath}')
-            else:
-                logging.warning(f'found {qs_found} of {num_qs} in {filepath}')
-    return qs_parsed
+            #let's grab our sections data record about this CEP
+            school_section_records = []
+            for record in sections:
+                if record['bn'] == bn:
+                    school_section_records.append(record)
+            #use school section records to narrow down to grab question
+            starting_index = 0
+            for record in school_section_records:
+                record['structure_index']
+    return records
 
 
-
-def test:
+def test():
     cep_structure_filepath = './cep1819-structure.csv'
+    cep_text_file_paths = './cep_txt'
     #check if issues, get questions
     structure = cep_structure_intake(cep_structure_filepath)
-    #can we find the question in every txt file? if not log which question and which text file
-    sections_parsed = find_section_indices(questions)
-    qs_parsed = find_q_indices(questions)
-
-
+    #start parsing the text files, starting broad and getting more granular
+    sections = find_section_indices(cep_text_file_paths, structure)
+    #questions = find_question_indices(cep_text_file_paths, sections, structure)
+    #answers
+    for record in sections:
+        if record['bn'] == 'Q031' and record['section_index'] != -1:
+            pp.pprint(record)
+    # qs_parsed = find_q_indices(questions)
 
 
 test()
-
