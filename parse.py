@@ -37,7 +37,7 @@ def cep_structure_intake(filepath):
 
 def fuzzysearch(query, data):
     match_current_q = None
-    for max_distance in range(1, 5):
+    for max_distance in range(1, 25):
         #match current q
         match_current_q = find_near_matches(query, data, max_l_dist=max_distance)
         #did we find anything?
@@ -148,7 +148,7 @@ def find_answer_indices(cep_text_file_paths, questions):
 
 
 def test():
-    cep_structure_filepath = './cep1819-structure-utf.csv'
+    cep_structure_filepath = './cep1819-structure-stripped.csv'
     cep_text_file_paths = './cep_txt_utf'
     #check if issues, get questions
     structure = cep_structure_intake(cep_structure_filepath)
