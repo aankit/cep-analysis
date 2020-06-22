@@ -7,9 +7,7 @@ from os import listdir
 from os.path import isfile, join
 import pprint
 from fuzzysearch import find_near_matches
-
-logging.basicConfig(stream=sys.stderr, level=logging.ERROR)
-pp = pprint.PrettyPrinter()
+from timeout import timeout
 
 
 #get list of all cleaned text files
@@ -21,7 +19,7 @@ def get_cep_txt_filepaths(text_dir_path):
 #check if cep structure csv is reading correctly, return lines with issues
 def cep_structure_intake(filepath):
     structure = []
-    cep_structure = open(filepath, 'r')
+    cep_structure = open(filepath, 'r', encoding='utf-8')
     with cep_structure:
         reader = csv.reader(cep_structure)
         #log if CSV has errors
@@ -37,129 +35,17 @@ def cep_structure_intake(filepath):
     return structure
 
 
-def fuzzy_parse_ceps(questions):
-    ceps_parsed = {}
-    q_not_found_count = {}
-    for filepath in get_cep_txt_filepaths():
-        ceps_parsed[filepath] = {}
-        # if filepath == './cep_txt_clean/X391.txt':
-        school_cep = open(filepath, 'r')
-        with school_cep:
-            data = school_cep.read()
-            num_qs = 0
-            qs_found = 0
-            #retrieve question matches
-            question_matches = []
-            for q_number, section_and_question in enumerate(questions):
-                #initializing here even though I'm populating below
-                ceps_parsed[filepath][q_number] = []
-                #break out section and question
-                section = section_and_question[0]
-                question = section_and_question[1]
-                #does this section exist?
-                if data.find(section) != -1:
-                    num_qs += 1
-                    #using fuzzysearch
-                    max_distance = 1  # Lehvenstein distance will increase if we can't initially find the question
-                    for i in range(0, 10):
-                        #match current q
-                        match_current_q = find_near_matches(question, data, max_l_dist=max_distance)
-                        #did we find anything?
-                        if len(match_current_q) > 0:
-                            #yup, increment count for logging and save away match
-                            qs_found += 1
-                            question_matches.append(match_current_q[0])
-                            break
-                        else:
-                            max_distance += i  # we didn't find anything so we increase max Levhenstein distance
-                    #if we're here, we didn't find the question
-                    if question in q_not_found_count:
-                        q_not_found_count[question] += 1
-                    else:
-                        q_not_found_count[question] = 1
-                        # logging if we didn't find total number of questions
-            if(qs_found == num_qs):
-                logging.info(f'found all qs in {filepath}')
-            else:
-                logging.warning(f'found {qs_found} of {num_qs} in {filepath}')
-            #retrieve all answers (in between questions)
-            for m, match in enumerate(question_matches):
-                question = match.matched
-                answer_start = match.end + 1
-                if m+1 == len(question_matches):
-                    next_match = len(data)
-                    answer_end = next_match - 1
-                else:
-                    next_match = question_matches[m+1]
-                    answer_end = next_match.start - 1
-                answer = data[answer_start:answer_end]
-                ceps_parsed[filepath][m] = [question, answer]
-    #for debugging parse process
-    for k, v in q_not_found_count.items():
-        if v > 1000 and v < 1579:
-            print(k)
-            print("----")
-    return ceps_parsed
-
-
-def parse_ceps(questions):
-    ceps_parsed = []
-    q_not_found_count = {}
-    for filepath in get_cep_txt_filepaths():
-        # ceps_parsed[filepath] = {}
-        # if filepath == './cep_txt_clean/X391.txt':
-        school_cep = open(filepath, 'r')
-        with school_cep:
-            data = school_cep.read()
-            num_qs = 0
-            qs_found = 0
-            #get lowest indices of questions
-            for q_number, section_and_question in enumerate(questions):
-                # separate section and question
-                section = section_and_question[0]
-                question = section_and_question[1]
-                # check if question section in data
-                if data.find(section) != -1:
-                    #initialize dict to capture cep, qn, q, and a set
-                    current_cep_q_a = {}
-                    current_cep_q_a['dbn'] = filepath[-8:-4]
-                    current_cep_q_a['number'] = q_number
-                    current_cep_q_a['question'] = question
-                    num_qs += 1
-                    # find current q lowest index
-                    q_lowest_index = data.find(question)
-                    if q_lowest_index != -1:
-                        # find next q lowest index
-                        next_q_lowest_index = data.find(questions[q_number+1][1]) if q_number < (len(questions)-1) else len(data)
-                        if next_q_lowest_index != -1:
-                            # set answer lowest index if q found
-                            a_lowest_index = q_lowest_index + len(question)
-                            # set answer highest index if next q found
-                            a_highest_index = next_q_lowest_index - 1 if next_q_lowest_index != -1 else -1
-                            # if q and a's found, save to parser indices else log error
-                            if a_lowest_index != -1:
-                                qs_found += 1
-                                # save the question number, question, answer lowest index, and answer highest index
-                                answer = data[a_lowest_index:a_highest_index]
-                            else:
-                                answer = "not found"
-                                if question in q_not_found_count:
-                                    q_not_found_count[question] += 1
-                                else:
-                                    q_not_found_count[question] = 1
-                    current_cep_q_a['answer'] = answer
-                ceps_parsed.append(current_cep_q_a)
-            # logging if we didn't find total number of questions
-            if(qs_found == num_qs):
-                logging.info(f'found all qs in {filepath}')
-            else:
-                logging.warning(f'found {qs_found} of {num_qs} in {filepath}')
-    #for debugging parse process
-    for k, v in q_not_found_count.items():
-        if v > 1000 and v < 1579:
-            print(k)
-            print("----")
-    return ceps_parsed
+def fuzzysearch(query, data):
+    match_current_q = None
+    for max_distance in range(1, 5):
+        #match current q
+        match_current_q = find_near_matches(query, data, max_l_dist=max_distance)
+        #did we find anything?
+        if len(match_current_q) > 0:
+            break
+        else:
+            match_current_q = None
+    return match_current_q
 
 
 def find_section_indices(cep_text_file_paths, structure):
@@ -204,26 +90,66 @@ def find_section_indices(cep_text_file_paths, structure):
 
 def find_question_indices(cep_text_file_paths, sections, structure):
     records = []
+    num_schools = 1
     for filepath in get_cep_txt_filepaths(cep_text_file_paths):
         school_cep = open(filepath, 'r')
         bn = filepath[-8:-4]
+        print(f'{num_schools}: {bn}')
         with school_cep:
             data = school_cep.read()
             #let's grab our sections data record about this CEP
-            school_section_records = []
-            for record in sections:
-                if record['bn'] == bn:
-                    school_section_records.append(record)
-            #use school section records to narrow down to grab question
-            starting_index = 0
+            school_section_records = [record for record in sections if record['bn'] == bn]
+            qf = 0
+            tq = 0
             for record in school_section_records:
-                pp.pprint(record['structure_index'])
+                tq += 1
+                question = structure[record['structure_index']][1]
+                section_data = data[record['section_index']:record['section_end_index']]
+                question_index = section_data.find(question)
+                if question_index == -1:
+                    fuzzy_match = fuzzysearch(question, section_data)
+                    if fuzzy_match is not None:
+                        if len(fuzzy_match) > 1:
+                            raise Exception("too many matches found")  # comment out in future
+                        else:
+                            qf += 1
+                            question_index = fuzzy_match[0].start
+                            question_end_index = fuzzy_match[0].end
+                    else:
+                        print(question)
+                else:
+                    qf += 1
+                    question_end_index = question_index + len(question)
+                #if we have a question that falls within current section, then let's remember the question indices
+                if question_index > record['section_index'] and question_end_index < record['section_end_index']:
+                    record['question_index'] = question_index
+                    record['question_end_index'] = question_end_index
+            print(f'{qf} out of {tq}')
+            num_schools += 1
     return records
 
 
+def find_answer_indices(cep_text_file_paths, questions):
+    records = []
+    for filepath in get_cep_txt_filepaths(cep_text_file_paths):
+        school_cep = open(filepath, 'r')
+        bn = filepath[-8:-4]
+        print(bn)
+        with school_cep:
+            data = school_cep.read()
+            #let's grab our sections data record about this CEP
+            school_records = [record for record in questions if record['bn'] == bn]
+            for record in school_records:
+                sti = record['structure_index']
+                si = record['section_index']
+                sei = record['section_end_index']
+                qi = record['question_index']
+                qei = record['question_end_index']
+
+
 def test():
-    cep_structure_filepath = './cep1819-structure.csv'
-    cep_text_file_paths = './cep_txt'
+    cep_structure_filepath = './cep1819-structure-utf.csv'
+    cep_text_file_paths = './cep_txt_utf'
     #check if issues, get questions
     structure = cep_structure_intake(cep_structure_filepath)
     #start parsing the text files, starting broad and getting more granular
@@ -235,5 +161,6 @@ def test():
             pp.pprint(record)
     # qs_parsed = find_q_indices(questions)
 
-
+logging.basicConfig(stream=sys.stderr, level=logging.ERROR)
+pp = pprint.PrettyPrinter()
 test()
