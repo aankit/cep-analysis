@@ -8,6 +8,7 @@ from os.path import isfile, join
 import pprint
 from fuzzysearch import find_near_matches
 from timeout import timeout
+import re
 
 
 #get list of all cleaned text files
@@ -163,6 +164,26 @@ def find_answer_indices(cep_text_file_paths, questions):
     return records
 
 
+#return records with term count as key and count as value
+def count_search_term(cep_text_file_paths, records, terms):
+    for filepath in get_cep_txt_filepaths(cep_text_file_paths):
+        school_cep = open(filepath, 'r')
+        bn = filepath[-8:-4]
+        with school_cep:
+            data = school_cep.read()
+            #let's grab our sections data record about this CEP
+            for record in records:
+                if record['bn'] == bn:
+                    answer_data = data[record['answer_index']:record['answer_end_index']]
+                    if record['bn'] == "X086":
+                        if re.search(rf'{term}', record['answer']):
+                            if record[term]:
+                                record[term] += 1
+                            else:
+                                record[term] = 1
+    return records
+
+
 def test():
     cep_structure_filepath = './cep1819-structure-clean.csv'
     cep_text_file_paths = './cep_txt_utf'
@@ -171,13 +192,14 @@ def test():
     #start parsing the text files, starting broad and getting more granular
     sections = find_section_indices(cep_text_file_paths, structure)
     questions = find_question_indices(cep_text_file_paths, sections, structure)
-    answers = find_answer_indices(cep_text_file_paths, questions)
+    records = find_answer_indices(cep_text_file_paths, questions)
+    records = count_search_term(cep_text_file_paths, records, 'ELA')
     #answers
     for record in answers:
-        if record['bn'] == 'Q031':
+        if record['bn'] == 'X086':
             pp.pprint(record)
     # qs_parsed = find_q_indices(questions)
 
 logging.basicConfig(stream=sys.stderr, level=logging.ERROR)
 pp = pprint.PrettyPrinter()
-# test()
+test()
