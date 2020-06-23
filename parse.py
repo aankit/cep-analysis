@@ -129,9 +129,9 @@ def find_question_indices(cep_text_file_paths, sections, structure):
                     qf += 1
                     question_end_index = question_index + len(question)
                 #if we have a question that falls within current section, then let's remember the question indices
-                record['question'] = question
                 record['question_index'] = record['section_index'] + question_index
                 record['question_end_index'] = record['section_index'] + question_end_index
+                record['question'] = question
                 records.append(record)
             print(f'{qf} out of {tq}')
             num_schools += 1
@@ -160,13 +160,16 @@ def find_answer_indices(cep_text_file_paths, questions):
                         answer_end_index = record['section_end_index']
                 record['answer_index'] = answer_index
                 record['answer_end_index'] = answer_end_index
+                record['answer'] = data[answer_index:answer_end_index]
                 records.append(record)
     return records
 
 
 #return records with term count as key and count as value
-def count_search_term(cep_text_file_paths, records, term):
+def count_search_term(cep_text_file_paths, records, term, case_senstive=False):
     for filepath in get_cep_txt_filepaths(cep_text_file_paths):
+        counter = "|"
+        print(f'searching {term} {counter}')
         school_cep = open(filepath, 'r')
         bn = filepath[-8:-4]
         with school_cep:
@@ -174,13 +177,16 @@ def count_search_term(cep_text_file_paths, records, term):
             #let's grab our sections data record about this CEP
             for record in records:
                 if record['bn'] == bn:
-                    answer_data = data[record['answer_index']:record['answer_end_index']]
-                    if record['bn'] == "X086":
-                        for match in re.findall(rf'{term}', answer_data):
-                            if term in record.keys():
-                                record[term] += 1
-                            else:
-                                record[term] = 1
+                    if case_senstive:
+                        matches = re.findall(rf'{term}', record['answer'])
+                    else:
+                        matches = re.findall(rf'{term}', record['answer'], re.IGNORECASE)
+                    for match in matches:
+                        if term in record.keys():
+                            record[term] += 1
+                        else:
+                            record[term] = 1
+        counter += "|"
     return records
 
 
@@ -193,10 +199,13 @@ def test():
     sections = find_section_indices(cep_text_file_paths, structure)
     questions = find_question_indices(cep_text_file_paths, sections, structure)
     records = find_answer_indices(cep_text_file_paths, questions)
-    records = count_search_term(cep_text_file_paths, records, 'ELA')
+    cs_terms = ['ELA']
+    ci_terms = ['math', 'code', 'computer', 'tech', 'literacy', 'blended literacy', 'computational thinking', 'science', 'grades served']
+    for term in ci_terms:
+        records = count_search_term(cep_text_file_paths, records, term)
     #answers
     for record in records:
-        if record['bn'] == 'X086' and 'ELA' in record.keys():
+        if record['bn'] == 'X086' and 'math' in record.keys():
             pp.pprint(record)
     # qs_parsed = find_q_indices(questions)
 
