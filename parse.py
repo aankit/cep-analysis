@@ -7,7 +7,6 @@ from os import listdir
 from os.path import isfile, join
 import pprint
 from fuzzysearch import find_near_matches
-from timeout import timeout
 import re
 
 
@@ -130,6 +129,7 @@ def find_question_indices(cep_text_file_paths, sections, structure):
                     qf += 1
                     question_end_index = question_index + len(question)
                 #if we have a question that falls within current section, then let's remember the question indices
+                record['question'] = question
                 record['question_index'] = record['section_index'] + question_index
                 record['question_end_index'] = record['section_index'] + question_end_index
                 records.append(record)
@@ -176,8 +176,8 @@ def count_search_term(cep_text_file_paths, records, term):
                 if record['bn'] == bn:
                     answer_data = data[record['answer_index']:record['answer_end_index']]
                     if record['bn'] == "X086":
-                        if re.search(rf'{term}', answer_data):
-                            if record[term]:
+                        for match in re.findall(rf'{term}', answer_data):
+                            if term in record.keys():
                                 record[term] += 1
                             else:
                                 record[term] = 1
@@ -196,7 +196,7 @@ def test():
     records = count_search_term(cep_text_file_paths, records, 'ELA')
     #answers
     for record in records:
-        if record['bn'] == 'X086':
+        if record['bn'] == 'X086' and 'ELA' in record.keys():
             pp.pprint(record)
     # qs_parsed = find_q_indices(questions)
 
