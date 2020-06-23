@@ -165,7 +165,7 @@ def find_answer_indices(cep_text_file_paths, questions):
 
 
 #return records with term count as key and count as value
-def count_search_term(cep_text_file_paths, records, terms):
+def count_search_term(cep_text_file_paths, records, term):
     for filepath in get_cep_txt_filepaths(cep_text_file_paths):
         school_cep = open(filepath, 'r')
         bn = filepath[-8:-4]
@@ -176,7 +176,7 @@ def count_search_term(cep_text_file_paths, records, terms):
                 if record['bn'] == bn:
                     answer_data = data[record['answer_index']:record['answer_end_index']]
                     if record['bn'] == "X086":
-                        if re.search(rf'{term}', record['answer']):
+                        if re.search(rf'{term}', answer_data):
                             if record[term]:
                                 record[term] += 1
                             else:
@@ -195,7 +195,7 @@ def test():
     records = find_answer_indices(cep_text_file_paths, questions)
     records = count_search_term(cep_text_file_paths, records, 'ELA')
     #answers
-    for record in answers:
+    for record in records:
         if record['bn'] == 'X086':
             pp.pprint(record)
     # qs_parsed = find_q_indices(questions)
