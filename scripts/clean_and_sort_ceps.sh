@@ -1,6 +1,6 @@
 #!/usr/local/bin/bash
 
-source $project_path/scripts/config.sh
+source config.sh
 
 for file in $project_path/txt/2018-19/*
 do

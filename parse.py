@@ -37,7 +37,7 @@ def cep_structure_intake(filepath):
 
 def fuzzysearch(query, data):
     match_current_q = None
-    for max_distance in range(1, 25):
+    for max_distance in range(1, 8):
         #match current q
         match_current_q = find_near_matches(query, data, max_l_dist=max_distance)
         #did we find anything?
@@ -69,13 +69,16 @@ def find_section_indices(cep_text_file_paths, structure):
                     cep_record['section'] = section
                     cep_record['section_index'] = section_index
                     school_records.append(cep_record)
+                else:
+                    print(f'{section} not found')
+                    # pass
             for i, record in enumerate(school_records):
                 current_section_index = record['section_index']
                 look_ahead = 1
                 next_section_index = None
                 while next_section_index is None:
                     if i+look_ahead >= len(school_records)-1:
-                        next_section_index = len(data)-1
+                        next_section_index = len(data) - 1
                     else:
                         next_section_index = school_records[i+look_ahead]['section_index']
                         if current_section_index == next_section_index:
@@ -104,26 +107,31 @@ def find_question_indices(cep_text_file_paths, sections, structure):
             for record in school_section_records:
                 tq += 1
                 question = structure[record['structure_index']][1]
+                section = structure[record['structure_index']][0]
                 section_data = data[record['section_index']:record['section_end_index']]
                 question_index = section_data.find(question)
                 if question_index == -1:
+                    print("using fuzzy")
                     fuzzy_match = fuzzysearch(question, section_data)
                     if fuzzy_match is not None:
                         if len(fuzzy_match) > 1:
+                            print(section)
+                            print(question)
+                            print(fuzzy_match)
                             raise Exception("too many matches found")  # comment out in future
                         else:
                             qf += 1
                             question_index = fuzzy_match[0].start
                             question_end_index = fuzzy_match[0].end
                     else:
-                        print(question)
+                        print(f'{section} : {question} not found')
                 else:
                     qf += 1
                     question_end_index = question_index + len(question)
                 #if we have a question that falls within current section, then let's remember the question indices
-                if question_index > record['section_index'] and question_end_index < record['section_end_index']:
-                    record['question_index'] = question_index
-                    record['question_end_index'] = question_end_index
+                record['question_index'] = record['section_index'] + question_index
+                record['question_end_index'] = record['section_index'] + question_end_index
+                records.append(record)
             print(f'{qf} out of {tq}')
             num_schools += 1
     return records
@@ -134,33 +142,42 @@ def find_answer_indices(cep_text_file_paths, questions):
     for filepath in get_cep_txt_filepaths(cep_text_file_paths):
         school_cep = open(filepath, 'r')
         bn = filepath[-8:-4]
-        print(bn)
         with school_cep:
             data = school_cep.read()
             #let's grab our sections data record about this CEP
             school_records = [record for record in questions if record['bn'] == bn]
-            for record in school_records:
-                sti = record['structure_index']
-                si = record['section_index']
-                sei = record['section_end_index']
-                qi = record['question_index']
-                qei = record['question_end_index']
+            for i, record in enumerate(school_records):
+                #the answer begins after the question ends, altho some qs have extra help text that we'll figure out later
+                answer_index = record['question_end_index'] + 1
+                #the answer either ends at the next question if q in same section or next section if different section
+                if i == len(school_records)-1:
+                    answer_end_index = record['section_end_index']
+                else:
+                    if record['section_index'] == school_records[i+1]['section_index']:
+                        answer_end_index = school_records[i+1]['question_index'] - 1
+                    else:
+                        answer_end_index = record['section_end_index']
+                record['answer_index'] = answer_index
+                record['answer_end_index'] = answer_end_index
+                records.append(record)
+    return records
 
 
 def test():
-    cep_structure_filepath = './cep1819-structure-stripped.csv'
+    cep_structure_filepath = './cep1819-structure-clean.csv'
     cep_text_file_paths = './cep_txt_utf'
     #check if issues, get questions
     structure = cep_structure_intake(cep_structure_filepath)
     #start parsing the text files, starting broad and getting more granular
     sections = find_section_indices(cep_text_file_paths, structure)
     questions = find_question_indices(cep_text_file_paths, sections, structure)
+    answers = find_answer_indices(cep_text_file_paths, questions)
     #answers
-    for record in sections:
-        if record['bn'] == 'Q031' and record['section_index'] != -1:
+    for record in answers:
+        if record['bn'] == 'Q031':
             pp.pprint(record)
     # qs_parsed = find_q_indices(questions)
 
 logging.basicConfig(stream=sys.stderr, level=logging.ERROR)
 pp = pprint.PrettyPrinter()
-test()
+# test()
