@@ -167,26 +167,23 @@ def find_answer_indices(cep_text_file_paths, questions):
 
 #return records with term count as key and count as value
 def count_search_term(cep_text_file_paths, records, term, case_senstive=False):
+    print(f'searching {term}')
     for filepath in get_cep_txt_filepaths(cep_text_file_paths):
-        counter = "|"
-        print(f'searching {term} {counter}')
         school_cep = open(filepath, 'r')
         bn = filepath[-8:-4]
         with school_cep:
             data = school_cep.read()
             #let's grab our sections data record about this CEP
             for record in records:
+                if term not in record.keys():
+                    record[term] = 0
                 if record['bn'] == bn:
                     if case_senstive:
                         matches = re.findall(rf'{term}', record['answer'])
                     else:
                         matches = re.findall(rf'{term}', record['answer'], re.IGNORECASE)
                     for match in matches:
-                        if term in record.keys():
-                            record[term] += 1
-                        else:
-                            record[term] = 1
-        counter += "|"
+                        record[term] += 1
     return records
 
 
@@ -200,13 +197,84 @@ def test():
     questions = find_question_indices(cep_text_file_paths, sections, structure)
     records = find_answer_indices(cep_text_file_paths, questions)
     cs_terms = ['ELA']
-    ci_terms = ['math', 'code', 'computer', 'tech', 'literacy', 'blended literacy', 'computational thinking', 'science', 'grades served']
+    ci_terms = ['math', 'code', 'computer', 'tech', 'literacy', 'blended literacy', 'computational thinking', 'science']
     for term in ci_terms:
         records = count_search_term(cep_text_file_paths, records, term)
-    #answers
+    for term in cs_terms:
+        records = count_search_term(cep_text_file_paths, records, term, True)
+    rh_schools = ['K516',
+                  'X086',
+                  'Q013',
+                  'Q306',
+                  'X359',
+                  'M182',
+                  'M083',
+                  'Q330',
+                  'Q014',
+                  'Q019',
+                  'X566',
+                  'Q226',
+                  'K392',
+                  'X076',
+                  'X481',
+                  'K007',
+                  'K013',
+                  'K065',
+                  'K089',
+                  'K108',
+                  'K149',
+                  'K158',
+                  'K190',
+                  'K202',
+                  'K213',
+                  'K224',
+                  'K273',
+                  'K290',
+                  'K306',
+                  'K325',
+                  'K328',
+                  'K345',
+                  'K346',
+                  'K557',
+                  'K677',
+                  'X020',
+                  'Q319',
+                  'X178',
+                  'X043',
+                  'K375',
+                  'K414',
+                  'M175',
+                  'K005',
+                  'Q031',
+                  'M015',
+                  'M096',
+                  'K041',
+                  'K172',
+                  'K557',
+                  'K026',
+                  'Q076',
+                  'R010',
+                  'M188',
+                  'K401']
+
+    filename = "portfolio-schools_search-terms.csv"
+    #build field names based on what was searched for
+    fieldnames = ['bn', 'section', 'question', 'answer']
+    for term in ci_terms:
+        fieldnames.append(term)
+    for term in cs_terms:
+        fieldnames.append(term)
+    to_write = []
     for record in records:
-        if record['bn'] == 'X086' and 'math' in record.keys():
-            pp.pprint(record)
+        record_to_write = {}
+        if record['bn'] in rh_schools:
+            for fieldname in fieldnames:
+                record_to_write[fieldname] = record[fieldname]
+            to_write.append(record_to_write)
+    with open(filename, 'w') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(to_write)
     # qs_parsed = find_q_indices(questions)
 
 logging.basicConfig(stream=sys.stderr, level=logging.ERROR)
