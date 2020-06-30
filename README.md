@@ -33,7 +33,7 @@ Also the cep1819-structure.csv is the earliest result. It was manually created t
 
 8. I researched, tested and also implemented a [fuzzysearch](https://github.com/taleinat/fuzzysearch) parser function that uses Levenshtein distance. Fuzzysearch was able to find questions that were mangled when converted to text from PDF when higher Levenshtein distances were used. Not using as main parser yet, but will test and make the switch if it gets me closer to 100% than String.find().
 
-9. Outputting query driven CSVs for CEP short answer data with structure - borough-number, section, question, answer, and then query date. The file in the repository portfolio-schools_search-terms.csv (.xlsx) are examples of output.
+9. Outputting query driven CSVs for CEP short answer data with structure - borough-number, section, question, answer, and then query date. The file in the repository portfolio-schools_search-terms.csv (.xlsx) are examples of output. Most current branch is "query".
 
 
 ## ToDo List
