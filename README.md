@@ -33,13 +33,15 @@ Also the cep1819-structure.csv is the earliest result. It was manually created t
 
 8. I researched, tested and also implemented a [fuzzysearch](https://github.com/taleinat/fuzzysearch) parser function that uses Levenshtein distance. Fuzzysearch was able to find questions that were mangled when converted to text from PDF when higher Levenshtein distances were used. Not using as main parser yet, but will test and make the switch if it gets me closer to 100% than String.find().
 
+9. Outputting query driven CSVs for CEP short answer data with structure - borough-number, section, question, answer, and then query date. The file in the repository portfolio-schools_search-terms.csv (.xlsx) are examples of output.
+
 
 ## ToDo List
 
+1. Priority now is on building on query functionality for 2018-19 "standard" CEP formats and how others may be able to query this data. Considering storing the data in a graph with lemmatized words tied to neighboring words, sentences, questions, sections, school, year and potentially other data.
 1. Analyze parse patterns to learn about CEPs and to find opportunities to sanitize, engineer, organize data.
 1. Build a text file of CEP specific "stop text", text that can be safely stripped out of question-answer CSV (may not be necessary)
 1. General NLP text pre-processing as described [here](https://medium.com/@datamonsters/text-preprocessing-in-python-steps-tools-and-examples-bf025f872908) also in [this awesome Google Sheet of tools](https://docs.google.com/spreadsheets/d/1-9rMhfcmxFv2V2Q5ZWn1FfLDZZYsuwb1eoSp9CiEEOg/edit#gid=1112515333)
-1. Build a CSV for the CEP short answer data with structure - district-borough-number, question, answer
 1. Do I need to parse Qs and As for the CEP or can I use NLP to skip this step and start to look for interesting patterns?
 1. Extract tabular CSV data [tabula-py](https://github.com/chezou/tabula-py)
 1. Topic analysis (Discovering and Visualizing Topics in Texts)
