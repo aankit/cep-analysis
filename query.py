@@ -27,26 +27,100 @@ def create_new_record_each_term(records, term, case_senstive=False):
             for match in re.finditer(rf'{term}', record['answer']):
                 new_record = record
                 new_record['term'] = term
-                new_record['excerpt'] = record['answer'][match.start():match.end()]
+                if match.start() < len(record['answer'])/4:
+                    excerpt_start = 0
+                else:
+                    excerpt_start = match.start()/2
+                if match.end() < len(record['answer'])*.75:
+                    excerpt_end = len(record['answer'])
+                else:
+                    excerpt_end = (len(record['answer']) - match.end())/2
+                new_record['excerpt'] = record['answer'][excerpt_start:excerpt_end]
+                term_records.append(new_record)
         else:
-            matches = re.findall(rf'{term}', record['answer'], re.IGNORECASE)
-        for match in matches:
-            record['term'] = match
-            term_records.append()
+            for match in re.finditer(rf'{term}', record['answer'], re.IGNORECASE):
+                new_record = record
+                new_record['term'] = term
+                if match.start() < len(record['answer'])/4:
+                    excerpt_start = 0
+                else:
+                    excerpt_start = match.start()/2
+                if match.end() < len(record['answer'])*.75:
+                    excerpt_end = len(record['answer'])
+                else:
+                    excerpt_end = (len(record['answer']) - match.end())/2
+                new_record['excerpt'] = record['answer'][excerpt_start:excerpt_end]
+                term_records.append(new_record)
     return term_records
+
+
+def query1(records, ci_terms, cs_terms, rh_schools):
+    for term in ci_terms:
+        records = count_search_term(records, term)
+    for term in cs_terms:
+        records = count_search_term(records, term, True)
+    #this is the first thing to paramterize (filtering by school)
+    filename = "portfolio-schools_search-terms.csv"
+    #build field names based on what was searched for
+    fieldnames = ['bn', 'section', 'question', 'answer']
+    for term in ci_terms:
+        fieldnames.append(term)
+    for term in cs_terms:
+        fieldnames.append(term)
+    to_write = []
+    for record in records:
+        record_to_write = {}
+        if record['bn'] in rh_schools:
+            for fieldname in fieldnames:
+                record_to_write[fieldname] = record[fieldname]
+            to_write.append(record_to_write)
+    with open(filename, 'w') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter='|')
+        writer.writeheader()
+        writer.writerows(to_write)
+
+
+def query2(records, cs_terms, ci_terms, rh_schools):
+    for term in ci_terms:
+        ci_term_records = create_new_record_each_term(records, term)
+    for term in cs_terms:
+        cs_term_records = create_new_record_each_term(records, term, True)
+    term_records = ci_term_records + cs_term_records
+    #this is the first thing to paramterize (filtering by school)
+    filename = "portfolio-schools_term_counts.csv"
+    #build field names based on what was searched for
+    fieldnames = ['bn', 'section', 'question', 'answer', 'term', 'excerpt']
+    to_write = []
+    for record in term_records:
+        record_to_write = {}
+        if record['bn'] in rh_schools:
+            for fieldname in fieldnames:
+                record_to_write[fieldname] = record[fieldname]
+            to_write.append(record_to_write)
+    with open(filename, 'w') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter='|')
+        writer.writeheader()
+        writer.writerows(to_write)
 
 
 def main():
     cep_structure_filepath = './cep1819-structure-clean.csv'
     cep_text_filepaths = './cep_txt_utf'
     records = parse_ceps(cep_text_filepaths, cep_structure_filepath)
-    cs_terms = ['ELA']
-    ci_terms = ['math', 'code', 'computer', 'tech', 'literacy', 'blended literacy', 'computational thinking', 'science']
-    for term in ci_terms:
-        records = count_search_term(records, term)
-    for term in cs_terms:
-        records = count_search_term(records, term, True)
-    #this is the first thing to paramterize (filtering by school)
+    cs_terms = ['ELA', 'CS']
+    ci_terms = ['math',
+                'coding',
+                'computer',
+                'tech',
+                'technology'
+                'literacy',
+                'blended literacy',
+                'computational thinking',
+                'science',
+                'algorithm',
+                'computer science',
+                'computing',
+                'decomposition']
     rh_schools = ['K516',
                   'X086',
                   'Q013',
@@ -101,28 +175,8 @@ def main():
                   'R010',
                   'M188',
                   'K401']
+    query2(records, cs_terms, ci_terms, rh_schools)
 
-    filename = "portfolio-schools_search-terms.csv"
-    #build field names based on what was searched for
-    fieldnames = ['bn', 'section', 'question', 'answer']
-    for term in ci_terms:
-        fieldnames.append(term)
-    for term in cs_terms:
-        fieldnames.append(term)
-    to_write = []
-    for record in records:
-        record_to_write = {}
-        if record['bn'] in rh_schools:
-            for fieldname in fieldnames:
-                record_to_write[fieldname] = record[fieldname]
-            to_write.append(record_to_write)
-    with open(filename, 'w') as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter='|')
-        writer.writeheader()
-        writer.writerows(to_write)
-    # qs_parsed = find_q_indices(questions)
 
 if __name__ == '__main__':
-    # logging.basicConfig(stream=sys.stderr, level=logging.INFO)
-    # pp = pprint.PrettyPrinter()
     main()
