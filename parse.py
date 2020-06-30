@@ -5,9 +5,20 @@ import sys
 import logging
 from os import listdir
 from os.path import isfile, join
-import pprint
 from fuzzysearch import find_near_matches
 import re
+
+logging.basicConfig(filename='parse.log', filemode='w', level=logging.INFO)
+
+
+def parse_ceps(cep_text_filepaths, cep_structure_filepath):
+    #check if issues, get questions
+    structure = cep_structure_intake(cep_structure_file_path)
+    #start parsing the text files, starting broad and getting more granular
+    sections = find_section_indices(cep_text_filepaths, structure)
+    questions = find_question_indices(cep_text_filepaths, sections, structure)
+    records = find_answer_indices(cep_text_filepaths, questions)
+    return records
 
 
 #get list of all cleaned text files
@@ -48,9 +59,9 @@ def fuzzysearch(query, data):
     return match_current_q
 
 
-def find_section_indices(cep_text_file_paths, structure):
+def find_section_indices(cep_text_filepaths, structure):
     records = []
-    for filepath in get_cep_txt_filepaths(cep_text_file_paths):
+    for filepath in get_cep_txt_filepaths(cep_text_filepaths):
         school_cep = open(filepath, 'r')
         with school_cep:
             data = school_cep.read()
@@ -70,7 +81,7 @@ def find_section_indices(cep_text_file_paths, structure):
                     cep_record['section_index'] = section_index
                     school_records.append(cep_record)
                 else:
-                    print(f'{section} not found')
+                    logging.log(f'{section} not found')
                     # pass
             for i, record in enumerate(school_records):
                 current_section_index = record['section_index']
@@ -91,13 +102,11 @@ def find_section_indices(cep_text_file_paths, structure):
     return records
 
 
-def find_question_indices(cep_text_file_paths, sections, structure):
+def find_question_indices(cep_text_filepaths, sections, structure):
     records = []
-    num_schools = 1
-    for filepath in get_cep_txt_filepaths(cep_text_file_paths):
+    for filepath in get_cep_txt_filepaths(cep_text_filepaths):
         school_cep = open(filepath, 'r')
         bn = filepath[-8:-4]
-        print(f'{num_schools}: {bn}')
         with school_cep:
             data = school_cep.read()
             #let's grab our sections data record about this CEP
@@ -111,20 +120,17 @@ def find_question_indices(cep_text_file_paths, sections, structure):
                 section_data = data[record['section_index']:record['section_end_index']]
                 question_index = section_data.find(question)
                 if question_index == -1:
-                    print("using fuzzy")
                     fuzzy_match = fuzzysearch(question, section_data)
                     if fuzzy_match is not None:
                         if len(fuzzy_match) > 1:
-                            print(section)
-                            print(question)
-                            print(fuzzy_match)
+                            logging.log(f'{question} found twice in {section}')
                             raise Exception("too many matches found")  # comment out in future
                         else:
                             qf += 1
                             question_index = fuzzy_match[0].start
                             question_end_index = fuzzy_match[0].end
                     else:
-                        print(f'{section} : {question} not found')
+                        logging.log(f'{section} : {question} not found')
                 else:
                     qf += 1
                     question_end_index = question_index + len(question)
@@ -133,14 +139,13 @@ def find_question_indices(cep_text_file_paths, sections, structure):
                 record['question_end_index'] = record['section_index'] + question_end_index
                 record['question'] = question
                 records.append(record)
-            print(f'{qf} out of {tq}')
-            num_schools += 1
+            logging.log(f'{bn}: {qf} out of {tq}')
     return records
 
 
-def find_answer_indices(cep_text_file_paths, questions):
+def find_answer_indices(cep_text_filepaths, questions):
     records = []
-    for filepath in get_cep_txt_filepaths(cep_text_file_paths):
+    for filepath in get_cep_txt_filepaths(cep_text_filepaths):
         school_cep = open(filepath, 'r')
         bn = filepath[-8:-4]
         with school_cep:
@@ -164,119 +169,3 @@ def find_answer_indices(cep_text_file_paths, questions):
                 records.append(record)
     return records
 
-
-#return records with term count as key and count as value
-def count_search_term(cep_text_file_paths, records, term, case_senstive=False):
-    print(f'searching {term}')
-    for filepath in get_cep_txt_filepaths(cep_text_file_paths):
-        school_cep = open(filepath, 'r')
-        bn = filepath[-8:-4]
-        with school_cep:
-            data = school_cep.read()
-            #let's grab our sections data record about this CEP
-            for record in records:
-                if term not in record.keys():
-                    record[term] = 0
-                if record['bn'] == bn:
-                    if case_senstive:
-                        matches = re.findall(rf'{term}', record['answer'])
-                    else:
-                        matches = re.findall(rf'{term}', record['answer'], re.IGNORECASE)
-                    for match in matches:
-                        record[term] += 1
-    return records
-
-
-def test():
-    cep_structure_filepath = './cep1819-structure-clean.csv'
-    cep_text_file_paths = './cep_txt_utf'
-    #check if issues, get questions
-    structure = cep_structure_intake(cep_structure_filepath)
-    #start parsing the text files, starting broad and getting more granular
-    sections = find_section_indices(cep_text_file_paths, structure)
-    questions = find_question_indices(cep_text_file_paths, sections, structure)
-    records = find_answer_indices(cep_text_file_paths, questions)
-    cs_terms = ['ELA']
-    ci_terms = ['math', 'code', 'computer', 'tech', 'literacy', 'blended literacy', 'computational thinking', 'science']
-    for term in ci_terms:
-        records = count_search_term(cep_text_file_paths, records, term)
-    for term in cs_terms:
-        records = count_search_term(cep_text_file_paths, records, term, True)
-    rh_schools = ['K516',
-                  'X086',
-                  'Q013',
-                  'Q306',
-                  'X359',
-                  'M182',
-                  'M083',
-                  'Q330',
-                  'Q014',
-                  'Q019',
-                  'X566',
-                  'Q226',
-                  'K392',
-                  'X076',
-                  'X481',
-                  'K007',
-                  'K013',
-                  'K065',
-                  'K089',
-                  'K108',
-                  'K149',
-                  'K158',
-                  'K190',
-                  'K202',
-                  'K213',
-                  'K224',
-                  'K273',
-                  'K290',
-                  'K306',
-                  'K325',
-                  'K328',
-                  'K345',
-                  'K346',
-                  'K557',
-                  'K677',
-                  'X020',
-                  'Q319',
-                  'X178',
-                  'X043',
-                  'K375',
-                  'K414',
-                  'M175',
-                  'K005',
-                  'Q031',
-                  'M015',
-                  'M096',
-                  'K041',
-                  'K172',
-                  'K557',
-                  'K026',
-                  'Q076',
-                  'R010',
-                  'M188',
-                  'K401']
-
-    filename = "portfolio-schools_search-terms.csv"
-    #build field names based on what was searched for
-    fieldnames = ['bn', 'section', 'question', 'answer']
-    for term in ci_terms:
-        fieldnames.append(term)
-    for term in cs_terms:
-        fieldnames.append(term)
-    to_write = []
-    for record in records:
-        record_to_write = {}
-        if record['bn'] in rh_schools:
-            for fieldname in fieldnames:
-                record_to_write[fieldname] = record[fieldname]
-            to_write.append(record_to_write)
-    with open(filename, 'w') as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(to_write)
-    # qs_parsed = find_q_indices(questions)
-
-logging.basicConfig(stream=sys.stderr, level=logging.ERROR)
-pp = pprint.PrettyPrinter()
-test()
