@@ -6,14 +6,13 @@ import logging
 from os import listdir
 from os.path import isfile, join
 from fuzzysearch import find_near_matches
-import re
 
 logging.basicConfig(filename='parse.log', filemode='w', level=logging.INFO)
 
 
 def parse_ceps(cep_text_filepaths, cep_structure_filepath):
     #check if issues, get questions
-    structure = cep_structure_intake(cep_structure_file_path)
+    structure = cep_structure_intake(cep_structure_filepath)
     #start parsing the text files, starting broad and getting more granular
     sections = find_section_indices(cep_text_filepaths, structure)
     questions = find_question_indices(cep_text_filepaths, sections, structure)
@@ -40,17 +39,18 @@ def cep_structure_intake(filepath):
             line_number += 1
             #does the CSV have the section, question structure?
             if(len(row) != 2):
-                logging.info("line %d has an issue", line_number)
+                msg = f"line {line_number} has an issue."
+                logging.info(msg)
             else:
                 structure.append(row)
     return structure
 
 
-def fuzzysearch(query, data):
+def fuzzysearch(query, data, max_distance=8):
     match_current_q = None
-    for max_distance in range(1, 8):
+    for distance in range(1, max_distance):
         #match current q
-        match_current_q = find_near_matches(query, data, max_l_dist=max_distance)
+        match_current_q = find_near_matches(query, data, max_l_dist=distance)
         #did we find anything?
         if len(match_current_q) > 0:
             break
@@ -81,7 +81,8 @@ def find_section_indices(cep_text_filepaths, structure):
                     cep_record['section_index'] = section_index
                     school_records.append(cep_record)
                 else:
-                    logging.log(f'{section} not found')
+                    msg = f"{section} not found"
+                    logging.info(msg)
                     # pass
             for i, record in enumerate(school_records):
                 current_section_index = record['section_index']
@@ -123,14 +124,16 @@ def find_question_indices(cep_text_filepaths, sections, structure):
                     fuzzy_match = fuzzysearch(question, section_data)
                     if fuzzy_match is not None:
                         if len(fuzzy_match) > 1:
-                            logging.log(f'{question} found twice in {section}')
+                            msg = f"{question} found twice in {section}"
+                            logging.info(msg)
                             raise Exception("too many matches found")  # comment out in future
                         else:
                             qf += 1
                             question_index = fuzzy_match[0].start
                             question_end_index = fuzzy_match[0].end
                     else:
-                        logging.log(f'{section} : {question} not found')
+                        msg = f"{section} : {question} not found"
+                        logging.info(msg)
                 else:
                     qf += 1
                     question_end_index = question_index + len(question)
@@ -139,7 +142,8 @@ def find_question_indices(cep_text_filepaths, sections, structure):
                 record['question_end_index'] = record['section_index'] + question_end_index
                 record['question'] = question
                 records.append(record)
-            logging.log(f'{bn}: {qf} out of {tq}')
+            msg = f"{bn}: {qf} out of {tq}"
+            logging.info(msg)
     return records
 
 
@@ -168,4 +172,3 @@ def find_answer_indices(cep_text_filepaths, questions):
                 record['answer'] = data[answer_index:answer_end_index]
                 records.append(record)
     return records
-

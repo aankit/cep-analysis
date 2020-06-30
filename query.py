@@ -1,9 +1,13 @@
+#!/usr/bin/env python
+
 from parse import parse_ceps
 import csv
+import re
+from fuzzysearch import find_near_matches
 
 
-#return records with term count as key and count as value
-def count_search_term(records, term, case_senstive=False):
+#add term as a key and count as value to each record
+def add_count_term_to_record(records, term, case_senstive=False):
     for record in records:
         if term not in record.keys():
             record[term] = 0
@@ -16,6 +20,22 @@ def count_search_term(records, term, case_senstive=False):
     return records
 
 
+def create_new_record_each_term(records, term, case_senstive=False):
+    term_records = []
+    for record in records:
+        if case_senstive:
+            for match in re.finditer(rf'{term}', record['answer']):
+                new_record = record
+                new_record['term'] = term
+                new_record['excerpt'] = record['answer'][match.start():match.end()]
+        else:
+            matches = re.findall(rf'{term}', record['answer'], re.IGNORECASE)
+        for match in matches:
+            record['term'] = match
+            term_records.append()
+    return term_records
+
+
 def main():
     cep_structure_filepath = './cep1819-structure-clean.csv'
     cep_text_filepaths = './cep_txt_utf'
@@ -26,6 +46,7 @@ def main():
         records = count_search_term(records, term)
     for term in cs_terms:
         records = count_search_term(records, term, True)
+    #this is the first thing to paramterize (filtering by school)
     rh_schools = ['K516',
                   'X086',
                   'Q013',
@@ -102,6 +123,6 @@ def main():
     # qs_parsed = find_q_indices(questions)
 
 if __name__ == '__main__':
-    logging.basicConfig(stream=sys.stderr, level=logging.INFO)
-    pp = pprint.PrettyPrinter()
+    # logging.basicConfig(stream=sys.stderr, level=logging.INFO)
+    # pp = pprint.PrettyPrinter()
     main()
