@@ -38,7 +38,9 @@ Also the cep1819-structure.csv is the earliest result. It was manually created t
 
 ## ToDo List
 
-1. Priority now is on building on query functionality for 2018-19 "standard" CEP formats and how others may be able to query this data. Considering storing the data in a graph with lemmatized words tied to neighboring words, sentences, questions, sections, school, year and potentially other data.
+1. Build a matrix of count of schools that mention pairs of interventions by looking at raw texts. 
+1. Priority now is on building on query functionality for 2018-19 "standard" CEP formats and how others may be able to query this data. 
+1. Considering different metadata paths: text with document locator data, a graph with lemmatized words tied to neighboring words, sentences, questions, sections, school, year and potentially other data, tex
 1. Analyze parse patterns to learn about CEPs and to find opportunities to sanitize, engineer, organize data.
 1. Build a text file of CEP specific "stop text", text that can be safely stripped out of question-answer CSV (may not be necessary)
 1. General NLP text pre-processing as described [here](https://medium.com/@datamonsters/text-preprocessing-in-python-steps-tools-and-examples-bf025f872908) also in [this awesome Google Sheet of tools](https://docs.google.com/spreadsheets/d/1-9rMhfcmxFv2V2Q5ZWn1FfLDZZYsuwb1eoSp9CiEEOg/edit#gid=1112515333)
