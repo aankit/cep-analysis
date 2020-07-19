@@ -2,6 +2,6 @@
 pdfs/
 venv/
 txts/
-standard_ceps_parsed.csv
-standard_ceps_parsed_csv.zip
+*.csv
+*.zip
 
