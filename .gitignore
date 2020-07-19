@@ -3,7 +3,7 @@ pdfs/
 venv/
 txts/
 txt/
-uncat_cep_text/
+uncat_cep_txt
 scep_txt_utf/
 scep_txt/
 rscep_txt_utf/
@@ -17,4 +17,7 @@ cep_cs_txt/
 *.csv
 *.zip
 *.xlsx
+*.txt
+*.log
+__pycache__/
 
