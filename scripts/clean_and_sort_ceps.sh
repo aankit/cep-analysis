@@ -6,6 +6,7 @@ for file in $project_path/txt/2018-19/*
 do
     filename=$(basename "$file")
     echo "cleaning ${filename}"
+    # sed alpha line strips down to alphanumeric, maybe unicode? should have documented where I found it
     stripped=$(sed 's/[^[:alpha:];\ -@]//g' < $file | \
             sed -n -e ":a" -e "$ s/\n//gp;N;b a" | \
             sed -e 's/ \{2,\}/ /g' | \
