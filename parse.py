@@ -6,28 +6,40 @@ import logging
 from os import listdir
 from os.path import isfile, join
 from fuzzysearch import find_near_matches
+import re
 
 logging.basicConfig(filename='parse.log', filemode='w', level=logging.INFO)
 
 
 def parse_ceps(cep_text_filepaths, cep_structure_filepath):
     #check if issues, get questions
-    structure = cep_structure_intake(cep_structure_filepath)
+    structure = structure_intake(cep_structure_filepath, 2)
     #start parsing the text files, starting broad and getting more granular
     sections = find_section_indices(cep_text_filepaths, structure)
     questions = find_question_indices(cep_text_filepaths, sections, structure)
-    records = find_answer_indices(cep_text_filepaths, questions)
-    return records
+    answers = find_answer_indices(cep_text_filepaths, questions)
+    return answers
+
+
+def parse_ceps_by_term(cep_text_filepaths, terms_filepath):
+    #check if issues with terms
+    structure = structure_intake(terms_filepath, 3, True)
+    terms = []
+    for row in structure:
+        terms.append(row[0])
+    excerpts = find_term_indices(cep_text_filepaths, structure)
+    # excerpts = find_excerpt_indices(cep_text_filepaths, terms)
+    return terms, excerpts
 
 
 #get list of all cleaned text files
 def get_cep_txt_filepaths(text_dir_path):
-    text_filepaths = [join(text_dir_path, f) for f in listdir(text_dir_path) if isfile(join(text_dir_path, f))]
+    text_filepaths = [join(text_dir_path, f) for f in listdir(text_dir_path) if not f.startswith('.') and isfile(join(text_dir_path, f))]
     return text_filepaths
 
 
 #check if cep structure csv is reading correctly, return lines with issues
-def cep_structure_intake(filepath):
+def structure_intake(filepath, expected_length, headers=False):
     structure = []
     cep_structure = open(filepath, 'r', encoding='utf-8')
     with cep_structure:
@@ -37,8 +49,11 @@ def cep_structure_intake(filepath):
         for row in reader:
             #for incremementing so we can report what line number of CSV error
             line_number += 1
+            #if headers and first line, go to next iteration
+            if headers and line_number == 1:
+                continue
             #does the CSV have the section, question structure?
-            if(len(row) != 2):
+            if len(row) != expected_length:
                 msg = f"line {line_number} has an issue."
                 logging.info(msg)
             else:
@@ -171,4 +186,46 @@ def find_answer_indices(cep_text_filepaths, questions):
                 record['answer_end_index'] = answer_end_index
                 record['answer'] = data[answer_index:answer_end_index]
                 records.append(record)
+    return records
+
+
+def find_term_indices(cep_text_filepaths, structure):
+    exact_matches_only = ["Fundations", "Zearn", "CodeX", "iReady"]
+    records = []
+    half_excerpt_length = 50
+    for filepath in get_cep_txt_filepaths(cep_text_filepaths):
+        school_cep = open(filepath, 'r')
+        bn = filepath[-8:-4]
+        with school_cep:
+            data = school_cep.read()
+            for row in structure:
+                term = row[0]
+                lookup_array = row[2].split(",")
+                for lookup in lookup_array:
+                    matches = re.finditer(rf"{lookup}", data)
+                    if not any(matches) and term not in exact_matches_only:
+                        matches = fuzzysearch(f" {lookup} ", data, 2)
+                    if matches:
+                        for match in matches:
+                            term_matches = {}
+                            try:
+                                start = match.start()
+                            except:
+                                start = match.start
+                            try:
+                                end = match.end()
+                            except:
+                                end = match.end
+                            if start-50 > 0:
+                                excerpt_start = start-50
+                            else:
+                                excerpt_start = 0
+                            excerpt_start = start-half_excerpt_length if start-half_excerpt_length > 0 else 0
+                            excerpt_end = end+half_excerpt_length if end+half_excerpt_length < len(data) else len(data)
+                            term_matches["bn"] = bn
+                            term_matches["term"] = term
+                            term_matches["start"] = start
+                            term_matches["end"] = end
+                            term_matches["excerpt"] = data[excerpt_start:excerpt_end]
+                            records.append(term_matches)
     return records

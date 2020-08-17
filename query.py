@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
-from parse import parse_ceps
+from parse import parse_ceps, parse_ceps_by_term
 import csv
 import re
 from fuzzysearch import find_near_matches
 import pprint
+import itertools
 
 pp = pprint.PrettyPrinter()
 
@@ -15,9 +16,9 @@ def add_count_term_to_record(records, term, case_senstive=False):
         if term not in record.keys():
             record[term] = 0
         if case_senstive:
-            matches = re.findall(rf'{term}', record['answer'])
+            matches = re.findall(rf"{term}", record['answer'])
         else:
-            matches = re.findall(rf'{term}', record['answer'], re.IGNORECASE)
+            matches = re.findall(rf"{term}", record['answer'], re.IGNORECASE)
         for match in matches:
             record[term] += 1
     return records
@@ -137,10 +138,57 @@ def query3(records, cs_terms, rh_schools):
         writer.writerows(to_write)
 
 
+def query4(excerpts, term_combinations, rh_schools):
+    records = []
+    for first, second in term_combinations:
+        record = {}
+        record["Intervention 1"] = first
+        record["Intervention 2"] = second
+        record["Num_Schools"] = 0
+        for school in rh_schools:
+            print(f"finding pairs in {school}")
+            school_excerpts = [e for e in excerpts if e["bn"] == school]
+            first_found = 0
+            second_found = 0
+            for excerpt in school_excerpts:
+                if excerpt["term"] == first:
+                    first_found += 1
+                if excerpt["term"] == second:
+                    second_found += 1
+                if first_found > 0 and second_found > 0:
+                    record["Num_Schools"] += 1
+                    print("pair found")
+                    break
+        records.append(record)
+    filename = "portfolio-schools_intervention_pairs.csv"
+    #build field names based on what was searched for
+    fieldnames = ["Intervention 1", "Intervention 2", "Num_Schools"]
+    with open(filename, 'w') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter='|')
+        writer.writeheader()
+        writer.writerows(records)
+
+
+def raw_data_write(records, fieldnames, filename):
+    to_write = []
+    for record in records:
+        row = {}
+        for fieldname in fieldnames:
+            row[fieldname] = record[fieldname]
+        to_write.append(row)
+    with open(filename, 'w') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter='|')
+        writer.writeheader()
+        writer.writerows(to_write)
+
+
 def main():
-    cep_structure_filepath = './cep1819-structure-clean.csv'
-    cep_text_filepaths = './cep_txt_utf'
-    records = parse_ceps(cep_text_filepaths, cep_structure_filepath)
+    cep_structure_filepath = './terms.csv'
+    cep_text_filepaths = './txt/2018-19/'
+    #parsing needs to happen once and be stored in a database, this will be database connection in future
+    #records = parse_ceps(cep_text_filepaths, cep_structure_filepath)
+    terms, excerpts = parse_ceps_by_term(cep_text_filepaths, cep_structure_filepath)
+    term_combinations = list(itertools.combinations(terms, 2))
     # cs_terms = ['ELA', 'CS', 'Go Math', 'EngageNYC', 'NYC Performance Series', 'Harcourt Science', 'Amplify']
     cs_terms = ['Accelerated Reader 360',
                 'Amplify',
@@ -258,7 +306,8 @@ def main():
                   'R010',
                   'M188',
                   'K401']
-    query3(records, cs_terms, rh_schools)
+    raw_data_write(excerpts, ["bn", "term", "excerpt"], "term_pairs_excerpts.csv")
+    query4(excerpts, term_combinations, rh_schools)
 
 
 if __name__ == '__main__':
