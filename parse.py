@@ -200,7 +200,8 @@ def find_term_indices(cep_text_filepaths, structure):
             data = school_cep.read()
             for row in structure:
                 term = row[0]
-                lookup_array = row[1].split(",")
+                #needs to be parameterized, right now manually referencing column with lookup term
+                lookup_array = row[1].split(",") 
                 for lookup in lookup_array:
                     matches = re.finditer(rf"{lookup}", data)
                     if not any(matches) and term not in exact_matches_only:
@@ -216,11 +217,7 @@ def find_term_indices(cep_text_filepaths, structure):
                                 end = match.end()
                             except:
                                 end = match.end
-                            if start-50 > 0:
-                                excerpt_start = start-50
-                            else:
-                                excerpt_start = 0
-                            excerpt_start = start-half_excerpt_length if start-half_excerpt_length > 0 else 0
+                            excerpt_start = start-half_excerpt_length if start > half_excerpt_length else 0
                             excerpt_end = end+half_excerpt_length if end+half_excerpt_length < len(data) else len(data)
                             term_matches["bn"] = bn
                             term_matches["term"] = term

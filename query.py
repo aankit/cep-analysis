@@ -184,9 +184,9 @@ def raw_data_write(records, fieldnames, filename):
 
 def main():
     years = ['2009-10', '2010-11', '2011-12', '2012-13', '2013-14', '2014-15', '2015-16', '2016-17', '2017-18', '2018-19']
-    cep_structure_filepath = './terms.csv'
+    cep_structure_filepath = './input/curriculum-terms.csv'
     for year in years:
-        output_file = f'output/{year}.csv'
+        output_file = f'output/curriculum_lookup_historical/{year}.csv'
         cep_text_filepaths = f'./txt/{year}/'
         print(output_file)
         #parsing needs to happen once and be stored in a database, this will be database connection in future
