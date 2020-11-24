@@ -1,8 +1,14 @@
-## What is this?
+## CEP Analysis
 
 Annually all NYC Department of Education schools, except for charters, bring together a team of folks to write Comprehensive Education Plans that describe their programming, staffing, budgeting, compliance, etc. in a range of different areas important to their superintendents and the city. These plans are made public as PDFs by the DOE - [learn more here](https://www.schools.nyc.gov/get-involved/families/school-leadership-team/comprehensive-education-plans). The `overview-of-the-educational-planning-process.pdf ` PDF has the process schools followed for 2019-20 CEPs (though they didn't post them publicly on the date indicated).
 
 The time, effort, and specificity of the data in these plans have led me to believe it should be open (machine-readable) so it can be analyzed and used in analyses by researchers and practioners and potentially be made legible for current and prospective teachers, school leaders, parents, and anyone else that is impacted by our public schools.
+
+## Requirements
+
+Spin up a virtualenv and install requirements.
+
+`pip install -r requirements.txt`
 
 ## Files
 
@@ -11,6 +17,8 @@ The time, effort, and specificity of the data in these plans have led me to beli
 * `parse.py` has functions used to validate input files and parse CEP text files
 * `query.py` where I've been writing (or trying to write) a function for each query we made into the CEPs during summer 2020. 
 * `output/` is where the various output data files live.
+
+## 
 
 ## CEP Analysis
 
