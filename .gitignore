@@ -3,6 +3,7 @@ pdfs/
 venv/
 txts/
 txt/
+html/
 uncat_cep_txt
 scep_txt_utf/
 scep_txt/
@@ -14,7 +15,6 @@ cep_txt_utf/
 cep_txt/
 cep_cs_txt_utf/
 cep_cs_txt/
-*.csv
 *.zip
 *.xlsx
 *.txt

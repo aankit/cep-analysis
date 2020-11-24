@@ -2,6 +2,7 @@
 
 source config.sh
 
+mkdir "${project_path}/pdfs/"
 for year in ${Years[@]}; do
     mkdir "${project_path}/pdfs/${year}"
     cd "${project_path}/pdfs/${year}"
