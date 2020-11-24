@@ -23,7 +23,7 @@ def parse_ceps(cep_text_filepaths, cep_structure_filepath):
 
 def parse_ceps_by_term(cep_text_filepaths, terms_filepath):
     #check if issues with terms
-    structure = structure_intake(terms_filepath, 3, True)
+    structure = structure_intake(terms_filepath, 2)
     terms = []
     for row in structure:
         terms.append(row[0])
@@ -190,7 +190,7 @@ def find_answer_indices(cep_text_filepaths, questions):
 
 
 def find_term_indices(cep_text_filepaths, structure):
-    exact_matches_only = ["Fundations", "Zearn", "CodeX", "iReady"]
+    exact_matches_only = ["Fundations", "Zearn", "CodeX", "iReady", "i-Ready"]
     records = []
     half_excerpt_length = 50
     for filepath in get_cep_txt_filepaths(cep_text_filepaths):
@@ -200,7 +200,7 @@ def find_term_indices(cep_text_filepaths, structure):
             data = school_cep.read()
             for row in structure:
                 term = row[0]
-                lookup_array = row[2].split(",")
+                lookup_array = row[1].split(",")
                 for lookup in lookup_array:
                     matches = re.finditer(rf"{lookup}", data)
                     if not any(matches) and term not in exact_matches_only:
