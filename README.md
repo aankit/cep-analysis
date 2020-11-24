@@ -6,10 +6,11 @@ The time, effort, and specificity of the data in these plans have led me to beli
 
 ## Files
 
-* `/scripts` has bash scripts for downloading, converting and cleaning text files
+* `scripts/` has bash scripts for downloading, converting and cleaning text files
+* `input/` contains files used as inputs to queries or parsing - i.e. list of terms to lookup, Robin Hood portfolio schools, standard CEP questions for 2018-19.
 * `parse.py` has functions used to validate input files and parse CEP text files
 * `query.py` where I've been writing (or trying to write) a function for each query we made into the CEPs during summer 2020. 
-* `/output` is where the various output data files live.
+* `output/` is where the various output data files live.
 
 ## CEP Analysis
 
